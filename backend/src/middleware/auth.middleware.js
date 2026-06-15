@@ -2,6 +2,7 @@ require('dotenv').config()
 const jwt=require('jsonwebtoken')
 const bcrypt=require('bcryptjs')
 const redis=require('../config/cache')
+
 const blacklistModel = require('../model/blacklist.model')
 
 const authUser=(async(req,res,next)=>
@@ -18,6 +19,7 @@ const authUser=(async(req,res,next)=>
     const isTokenBlacklisted=await redis.get(token)
 
     if(isTokenBlacklisted)
+
     {
         return res.status(401).json({
             message:'Unauthorized access'
@@ -32,6 +34,7 @@ const authUser=(async(req,res,next)=>
     catch(err){
         console.log(err);
         // throw err
+
     }
 })
 

@@ -9,6 +9,7 @@ const App = () => {
   <RouterProvider router={router}>
         <FaceExpression/>
   </RouterProvider>
+
     </>
   )
 }

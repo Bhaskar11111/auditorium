@@ -10,6 +10,7 @@ const blacklistSchema=new mongoose.Schema({
         default:Date.now,
         expiresIn:"3d"
     }
+
 })
 
 const blacklistModel=mongoose.model('blacklist',blacklistSchema)

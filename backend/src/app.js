@@ -13,3 +13,4 @@ app.use(cookieParser())
 app.use('/test/auth',authRouter)
 
 module.exports=app;
+
