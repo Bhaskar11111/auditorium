@@ -1,13 +1,13 @@
 import React from 'react'
-import FaceExpression from './features/expression/components/FaceExpression'
 import Ref from './features/expression/components/Ref'
 import { RouterProvider } from 'react-router'
 import { router } from '../src/auth.route'
+import AirWriting from './features/expression/components/AirWriting'
 const App = () => {
   return (
     <>
   <RouterProvider router={router}>
-        <FaceExpression/>
+        <AirWriting/>
   </RouterProvider>
 
     </>

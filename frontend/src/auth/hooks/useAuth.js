@@ -50,5 +50,4 @@ export const useAuth = () => {
     return({loading,user,handleRegister,handleLogin,handleGetUser,handleLogout})
   }
 
-
 export default useAuth
