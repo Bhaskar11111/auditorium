@@ -37,9 +37,9 @@ const END_THRESHOLD = 0.065;
 const MAX_MISSING_FRAMES = 10;
 const LONG_MISSING_THRESHOLD = 15;
 const CLEAR_HOLD_MS = 2000;
-const SMOOTHING_WINDOW = 1;
-const JUMP_DISTANCE = 95;
-const PEN_EMA_ALPHA = 0.78;
+const SMOOTHING_WINDOW = 2;
+const JUMP_DISTANCE = 75;
+const PEN_EMA_ALPHA = 0.72;
 const HUD_UPDATE_INTERVAL = 180;
 const VIDEO_KEEP_ALIVE_INTERVAL = 500;
 const CANVAS_WIDTH = 640;
@@ -154,8 +154,6 @@ const keepVideoRendering = (video, stream, now) => {
     video.srcObject = stream;
   }
 
-  // Some browsers pause a muted camera element after GPU-heavy work; restart it
-  // without touching the canvas so the live preview stays behind the strokes.
   if (video.srcObject && video.paused) {
     video.play().catch(() => {});
   }
@@ -176,7 +174,6 @@ const getCanvasContexts = (canvasRef) => {
 };
 
 const syncCanvasSize = (canvas) => {
-  // Keep the backing store identical to the 640x480 video box.
   if (canvas.width === CANVAS_WIDTH && canvas.height === CANVAS_HEIGHT) {
     return false;
   }
@@ -191,9 +188,9 @@ const configureDrawingContext = () => {
 
   drawingCtx.lineCap = "round";
   drawingCtx.lineJoin = "round";
-  drawingCtx.strokeStyle = "#00ff41";
-  drawingCtx.shadowColor = "#821c1a";
-  drawingCtx.shadowBlur = 2;
+  drawingCtx.strokeStyle = "#00ff0d";
+  // drawingCtx.shadowColor = "#d84b4b";
+  // drawingCtx.shadowBlur = 0;
   drawingCtx.globalAlpha = 1;
   drawingCtx.globalCompositeOperation = "source-over";
 };
@@ -305,8 +302,8 @@ const drawPenSegment = (point) => {
   }
 
   const speed = distanceBetween(point, lastPoint);
-  const lineWidth = clamp(8 - speed * 0.1, 3.5, 7.5);
-  const steps = Math.max(1, Math.ceil(speed / 10));
+  const lineWidth = clamp(9 - speed * 0.06, 5, 9);
+  const steps = Math.max(1, Math.ceil(speed / 7));
 
   drawingCtx.lineWidth = lineWidth;
   drawingCtx.beginPath();

@@ -9,17 +9,253 @@ const getFpsClass = (fps) => {
 };
 
 const OCR_SCALE = 3;
-const OCR_PADDING = 28;
+const OCR_PADDING = 36;
 const OCR_MIN_INK_PIXELS = 40;
+const OCR_RECOGNITION_DELAY_MS = 1200;
+const SUPPORTED_GENRES = ["POP", "HIP-HOP", "ROCK", "EDM", "CLASSICAL", "METAL"];
+const GENRE_ALIASES = {
+  POP: ["POP", "PO P", "P0P","P"],
+  "HIP-HOP": [
+    "HIP-HOP",
+    "HIP HOP",
+    "HIPHOP",
+    "HIPPOP",
+    "HIP OP",
+    "HIP HP",
+    "HIPH0P",
+    "H1PHOP",
+    "HO",
+    "HI",
+    "H"
+  ],
+  ROCK: ["ROCK", "ROK", "ROC", "R0CK","RO","R"],
+  EDM: ["EDM", "E D M", "EDN","ED","E"],
+  CLASSICAL: [
+    "CLASSICAL",
+    "CLASICAL",
+    "CLASSIC",
+    "CLASSICA",
+    "CLASS",
+    "CLASIC",
+    "CLSSICAL",
+    "CLASSICL",
+    "CLASSICALS",
+    "CLA5SICAL",
+    "CL",
+    "C"
+  ],
+  METAL: ["METAL", "MET", "METL", "META", "MEL", "MFT", "NETAL", "HEAVY METAL", "HEAVYMETAL","ME","M"],
+};
+const FALLBACK_VIDEOS = {
+  POP: [
+    { id: "JGwWNGJdvx8", title: "Ed Sheeran - Shape of You" },
+    { id: "kJQP7kiw5Fk", title: "Luis Fonsi - Despacito" },
+    { id: "RgKAFK5djSk", title: "Wiz Khalifa - See You Again" },
+    { id: "OPf0YbXqDm0", title: "Mark Ronson - Uptown Funk" },
+    { id: "hT_nvWreIhg", title: "OneRepublic - Counting Stars" },
+    { id: "CevxZvSJLk8", title: "Katy Perry - Roar" },
+    { id: "fRh_vgS2dFE", title: "Justin Bieber - Sorry" },
+    { id: "YQHsXMglC9A", title: "Adele - Hello" },
+  ],
+  "HIP-HOP": [
+    { id: "8UVNT4wvIGY", title: "Gotye - Somebody That I Used To Know" },
+    { id: "uelHwf8o7_U", title: "Eminem ft. Rihanna - Love The Way You Lie" },
+    { id: "XbGs_qK2PQA", title: "Eminem - Rap God" },
+    { id: "YVkUvmDQ3HY", title: "Eminem - Without Me" },
+    { id: "eJO5HU_7_1w", title: "Eminem - The Real Slim Shady" },
+    { id: "tvTRZJ-4EyI", title: "Kendrick Lamar - HUMBLE." },
+    { id: "2zNSgSzhBfM", title: "Drake - Hotline Bling" },
+    { id: "iZJXvjeWlVA", title: "Dr. Dre - Still D.R.E." },
+  ],
+  ROCK: [
+    { id: "fJ9rUzIMcZQ", title: "Queen - Bohemian Rhapsody" },
+    { id: "hTWKbfoikeg", title: "Nirvana - Smells Like Teen Spirit" },
+    { id: "ktvTqknDobU", title: "Imagine Dragons - Radioactive" },
+    { id: "1w7OgIMMRc4", title: "Guns N' Roses - Sweet Child O' Mine" },
+    { id: "eVTXPUF4Oz4", title: "Linkin Park - In The End" },
+    { id: "kXYiU_JCYtU", title: "Linkin Park - Numb" },
+    { id: "l482T0yNkeo", title: "AC/DC - Highway to Hell" },
+    { id: "pAgnJDJN4VA", title: "AC/DC - Back In Black" },
+  ],
+  EDM: [
+    { id: "60ItHLz5WEA", title: "Alan Walker - Faded" },
+    { id: "YqeW9_5kURI", title: "Major Lazer & DJ Snake - Lean On" },
+    { id: "IcrbM1l_BoI", title: "Avicii - Wake Me Up" },
+    { id: "JRfuAukYTKg", title: "David Guetta - Titanium" },
+    { id: "gCYcHz2k5x0", title: "The Chainsmokers - Don't Let Me Down" },
+    { id: "PT2_F-1esPk", title: "The Chainsmokers - Closer" },
+    { id: "ebXbLfLACGM", title: "Martin Garrix - Animals" },
+    { id: "kOkQ4T5WO9E", title: "Calvin Harris - Summer" },
+  ],
+  CLASSICAL: [
+    { id: "GRxofEmo3HA", title: "Beethoven - Moonlight Sonata" },
+    { id: "4Tr0otuiQuU", title: "Mozart - Eine Kleine Nachtmusik" },
+    { id: "jgpJVI3tDbY", title: "Vivaldi - Four Seasons" },
+    { id: "ho9rZjlsyYY", title: "Bach - Cello Suite No. 1" },
+    { id: "fOk8Tm815lE", title: "Tchaikovsky - Swan Lake" },
+    { id: "q9bU12gXUyM", title: "Chopin - Nocturne Op. 9 No. 2" },
+    { id: "rEGOihjqO9w", title: "Beethoven - Symphony No. 5" },
+    { id: "GRxofEmo3HA", title: "Classical Essentials" },
+  ],
+  METAL: [
+    { id: "CD-E-LDc384", title: "Metallica - Enter Sandman" },
+    { id: "tAGnKpE4NCI", title: "Metallica - Nothing Else Matters" },
+    { id: "WM8bTdBs-cw", title: "System Of A Down - Chop Suey!" },
+    { id: "CSvFpBOe8eY", title: "System Of A Down - Toxicity" },
+    { id: "iywaBOMvYLI", title: "Slipknot - Duality" },
+    { id: "3mbvWn1EY6g", title: "Iron Maiden - The Trooper" },
+    { id: "86URGgqONvA", title: "Black Sabbath - Paranoid" },
+    { id: "AkFqg5wAuFk", title: "Avenged Sevenfold - Hail To The King" },
+  ],
+};
 
 const normalizeDetectedText = (text) =>
   text
-    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .replace(/[^a-zA-Z0-9\s-]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .toUpperCase();
 
-const createOcrCanvas = (sourceCanvas) => {
+const compactText = (text) =>
+  normalizeDetectedText(text).replace(/[^A-Z0-9]/g, "");
+
+const levenshteinDistance = (a, b) => {
+  const matrix = Array.from({ length: a.length + 1 }, (_, row) => [row]);
+
+  for (let col = 1; col <= b.length; col += 1) {
+    matrix[0][col] = col;
+  }
+
+  for (let row = 1; row <= a.length; row += 1) {
+    for (let col = 1; col <= b.length; col += 1) {
+      const cost = a[row - 1] === b[col - 1] ? 0 : 1;
+      matrix[row][col] = Math.min(
+        matrix[row - 1][col] + 1,
+        matrix[row][col - 1] + 1,
+        matrix[row - 1][col - 1] + cost
+      );
+    }
+  }
+
+  return matrix[a.length][b.length];
+};
+
+const matchGenre = (text, confidence = 100) => {
+  const normalized = normalizeDetectedText(text);
+  const compact = compactText(normalized);
+
+  if (!compact) return null;
+
+  
+  if (compact === "EDM" && confidence < 55) {
+    return null;
+  }
+
+  if (["MET", "MFT", "MEL","MNT","M"].includes(compact)) {
+    return "METAL";
+  }
+
+  if (
+    compact.includes("HIPHOP") ||
+    compact.includes("HIPPOP") ||
+    normalized.includes("HIP HOP") ||
+    normalized.includes("HIP OP") ||
+    normalized.includes("H")
+  ) {
+    return "HIP-HOP";
+  }
+
+  if (
+    compact.startsWith("CLASS") ||
+    compact.includes("CLASIC") ||
+    compact.includes("CLASICAL") ||
+    compact.includes("CLASSIC") ||
+    compact.includes("CL") ||
+    compact.includes("C") 
+  ) {
+    return "CLASSICAL";
+  }
+
+  for (const genre of SUPPORTED_GENRES) {
+    const candidates = [genre, ...GENRE_ALIASES[genre]];
+
+    if (
+      candidates.some((candidate) => {
+        const normalizedCandidate = normalizeDetectedText(candidate);
+        return (
+          normalized.includes(normalizedCandidate) ||
+          compact.includes(compactText(normalizedCandidate))
+        );
+      })
+    ) {
+      return genre;
+    }
+  }
+
+  const best = SUPPORTED_GENRES
+    .flatMap((genre) =>
+      [genre, ...GENRE_ALIASES[genre]].map((candidate) => ({
+        genre,
+        distance: levenshteinDistance(compact, compactText(candidate)),
+      }))
+    )
+    .sort((a, b) => a.distance - b.distance)[0];
+
+  if (!best) return null;
+
+  if (best.genre === "EDM" && confidence < 55) {
+    return null;
+  }
+
+  const maxDistance = best.genre === "CLASSICAL" || best.genre === "HIP-HOP"
+    ? 3
+    : 2;
+
+  return best.distance <= maxDistance ? best.genre : null;
+};
+
+const pickRandom = (items, recentIds = []) => {
+  const recentSet = new Set(recentIds);
+  const freshItems = items.filter((item) => !recentSet.has(item.id));
+  const pool = freshItems.length > 0 ? freshItems : items;
+
+  return pool[Math.floor(Math.random() * pool.length)];
+};
+
+const getGenreSearchLabel = (genre) =>
+  ({
+    "HIP-HOP": "hip hop",
+    EDM: "electronic dance music",
+  }[genre] || genre.toLowerCase());
+
+const fetchGenreVideo = async (genre, recentIds = []) => {
+  const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+
+  if (apiKey) {
+    const query = encodeURIComponent(`${getGenreSearchLabel(genre)} official music playlist`);
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=12&q=${query}&key=${apiKey}`
+    );
+
+    if (response.ok) {
+      const payload = await response.json();
+      const results = payload.items
+        ?.map((item) => ({
+          id: item.id?.videoId,
+          title: item.snippet?.title || `${genre} video`,
+        }))
+        .filter((item) => item.id);
+
+      if (results?.length) {
+        return pickRandom(results, recentIds);
+      }
+    }
+  }
+
+  return pickRandom(FALLBACK_VIDEOS[genre], recentIds);
+};
+
+const createOcrImages = (sourceCanvas) => {
   const sourceCtx = sourceCanvas?.getContext("2d", { willReadFrequently: true });
 
   if (!sourceCanvas || !sourceCtx) return null;
@@ -53,41 +289,81 @@ const createOcrCanvas = (sourceCanvas) => {
   const cropY = Math.max(0, minY - OCR_PADDING);
   const cropWidth = Math.min(width - cropX, maxX - minX + OCR_PADDING * 2);
   const cropHeight = Math.min(height - cropY, maxY - minY + OCR_PADDING * 2);
-  const ocrCanvas = document.createElement("canvas");
-  const ocrCtx = ocrCanvas.getContext("2d");
+  const inputCanvas = document.createElement("canvas");
+  const inputCtx = inputCanvas.getContext("2d", { willReadFrequently: true });
+  const processedCanvas = document.createElement("canvas");
+  const processedCtx = processedCanvas.getContext("2d", { willReadFrequently: true });
+  const outputWidth = Math.max(1, cropWidth * OCR_SCALE + OCR_PADDING * 2);
+  const outputHeight = Math.max(1, cropHeight * OCR_SCALE + OCR_PADDING * 2);
 
-  ocrCanvas.width = Math.max(1, cropWidth * OCR_SCALE);
-  ocrCanvas.height = Math.max(1, cropHeight * OCR_SCALE);
-  ocrCtx.fillStyle = "#ffffff";
-  ocrCtx.fillRect(0, 0, ocrCanvas.width, ocrCanvas.height);
-  ocrCtx.imageSmoothingEnabled = true;
-  ocrCtx.imageSmoothingQuality = "high";
-  ocrCtx.drawImage(
+  inputCanvas.width = outputWidth;
+  inputCanvas.height = outputHeight;
+  processedCanvas.width = outputWidth;
+  processedCanvas.height = outputHeight;
+
+  inputCtx.clearRect(0, 0, outputWidth, outputHeight);
+  inputCtx.imageSmoothingEnabled = true;
+  inputCtx.imageSmoothingQuality = "high";
+  inputCtx.drawImage(
     sourceCanvas,
     cropX,
     cropY,
     cropWidth,
     cropHeight,
-    0,
-    0,
-    ocrCanvas.width,
-    ocrCanvas.height
+    OCR_PADDING,
+    OCR_PADDING,
+    cropWidth * OCR_SCALE,
+    cropHeight * OCR_SCALE
   );
 
-  const processed = ocrCtx.getImageData(0, 0, ocrCanvas.width, ocrCanvas.height);
 
-  for (let index = 0; index < processed.data.length; index += 4) {
-    const alpha = processed.data[index + 3];
-    const isInk = alpha > 20;
+  const transparentStroke = inputCtx.getImageData(0, 0, outputWidth, outputHeight);
+  const processed = processedCtx.createImageData(outputWidth, outputHeight);
+  const inkMask = new Uint8Array(outputWidth * outputHeight);
 
-    processed.data[index] = isInk ? 0 : 255;
-    processed.data[index + 1] = isInk ? 0 : 255;
-    processed.data[index + 2] = isInk ? 0 : 255;
-    processed.data[index + 3] = 255;
+  for (let index = 0; index < transparentStroke.data.length; index += 4) {
+    const alpha = transparentStroke.data[index + 3];
+    const isInk = alpha > 18;
+    inkMask[index / 4] = isInk ? 1 : 0;
   }
 
-  ocrCtx.putImageData(processed, 0, 0);
-  return ocrCanvas;
+  
+  for (let y = 0; y < outputHeight; y += 1) {
+    for (let x = 0; x < outputWidth; x += 1) {
+      const offset = y * outputWidth + x;
+      const left = x > 0 ? offset - 1 : offset;
+      const right = x < outputWidth - 1 ? offset + 1 : offset;
+      const up = y > 0 ? offset - outputWidth : offset;
+      const down = y < outputHeight - 1 ? offset + outputWidth : offset;
+      const isInk =
+        inkMask[offset] ||
+        inkMask[left] ||
+        inkMask[right] ||
+        inkMask[up] ||
+        inkMask[down];
+      const index = offset * 4;
+
+      processed.data[index] = isInk ? 0 : 255;
+      processed.data[index + 1] = isInk ? 0 : 255;
+      processed.data[index + 2] = isInk ? 0 : 255;
+      processed.data[index + 3] = 255;
+    }
+  }
+
+  processedCtx.putImageData(processed, 0, 0);
+
+  const inputPreviewCanvas = document.createElement("canvas");
+  const inputPreviewCtx = inputPreviewCanvas.getContext("2d");
+  inputPreviewCanvas.width = outputWidth;
+  inputPreviewCanvas.height = outputHeight;
+  inputPreviewCtx.fillStyle = "#abff04";
+  inputPreviewCtx.fillRect(0, 0, outputWidth, outputHeight);
+  inputPreviewCtx.drawImage(inputCanvas, 0, 0);
+
+  return {
+    inputCanvas: inputPreviewCanvas,
+    processedCanvas,
+  };
 };
 
 const AirWriting = () => {
@@ -103,6 +379,15 @@ const AirWriting = () => {
   const [text, setText] = useState("Ready");
   const [detectedWords, setDetectedWords] = useState([]);
   const [ocrStatus, setOcrStatus] = useState("Idle");
+  const [ocrConfidence, setOcrConfidence] = useState(null);
+  const [ocrDebugImage, setOcrDebugImage] = useState("");
+  const [ocrProcessedImage, setOcrProcessedImage] = useState("");
+  const [rawOcrText, setRawOcrText] = useState("");
+  const [normalizedOcrText, setNormalizedOcrText] = useState("");
+  const [detectedGenre, setDetectedGenre] = useState(null);
+  const [currentSong, setCurrentSong] = useState(null);
+  const [playbackStatus, setPlaybackStatus] = useState("Idle");
+  const [playerKey, setPlayerKey] = useState(0);
   const [hud, setHud] = useState({
     fps: 0,
     averageFps: 0,
@@ -125,9 +410,10 @@ const AirWriting = () => {
     const worker = await Tesseract.createWorker("eng", 1);
 
     await worker.setParameters({
-      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
-      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789- ",
+      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_WORD,
       user_defined_dpi: "300",
+      preserve_interword_spaces: "1",
     });
 
     ocrWorkerRef.current = worker;
@@ -135,30 +421,48 @@ const AirWriting = () => {
   }, []);
 
   const recognizeText = useCallback(async () => {
-    const ocrCanvas = createOcrCanvas(canvasRef.current);
+    const ocrImages = createOcrImages(canvasRef.current);
 
-    if (!ocrCanvas || recognitionRunningRef.current) {
+    if (!ocrImages || recognitionRunningRef.current) {
+      if (!ocrImages) {
+        setOcrStatus("No ink to scan");
+      }
       return;
     }
 
     recognitionRunningRef.current = true;
     setOcrStatus("Recognizing");
+    setOcrDebugImage(ocrImages.inputCanvas.toDataURL("image/png"));
+    setOcrProcessedImage(ocrImages.processedCanvas.toDataURL("image/png"));
 
     try {
       const worker = await getOcrWorker();
       const {
         data: { text: rawText, confidence },
-      } = await worker.recognize(ocrCanvas);
-      const words = normalizeDetectedText(rawText).split(" ").filter(Boolean);
+      } = await worker.recognize(ocrImages.processedCanvas);
+      const normalizedText = normalizeDetectedText(rawText);
+      const roundedConfidence = Math.round(confidence);
+      const matchedGenre = matchGenre(normalizedText, roundedConfidence);
+      const words = normalizedText.split(" ").filter(Boolean);
+      const displayWords = words.length > 0
+        ? words
+        : matchedGenre
+          ? [matchedGenre]
+          : [];
 
-      if (words.length > 0) {
+      setRawOcrText(rawText.trim());
+      setNormalizedOcrText(normalizedText);
+      setOcrConfidence(roundedConfidence);
+      setDetectedGenre(matchedGenre);
+
+      if (displayWords.length > 0) {
         setDetectedWords((currentWords) => {
-          const latestWords = words.map((word) => ({
+          const latestWords = displayWords.map((word) => ({
             word,
-            confidence: Math.round(confidence),
+            confidence: roundedConfidence,
             id: `${word}-${Date.now()}`,
           }));
-          const latestWordSet = new Set(words);
+          const latestWordSet = new Set(displayWords);
           const withoutDuplicates = currentWords.filter(
             (item) => !latestWordSet.has(item.word)
           );
@@ -168,9 +472,26 @@ const AirWriting = () => {
             ...withoutDuplicates,
           ].slice(0, 12);
         });
-        setOcrStatus("Detected");
+        setOcrStatus(matchedGenre ? "Genre detected" : "Detected text");
       } else {
         setOcrStatus("No text found");
+      }
+
+      if (matchedGenre) {
+        setPlaybackStatus("Finding song");
+
+        try {
+          const song = await fetchGenreVideo(matchedGenre);
+          setCurrentSong({
+            ...song,
+            genre: matchedGenre,
+          });
+          setPlayerKey((key) => key + 1);
+          setPlaybackStatus("Autoplay requested");
+        } catch (error) {
+          console.error("Music lookup failed", error);
+          setPlaybackStatus("Music lookup failed");
+        }
       }
     } catch (error) {
       console.error("OCR failed", error);
@@ -182,9 +503,10 @@ const AirWriting = () => {
 
   const scheduleRecognition = useCallback(() => {
     window.clearTimeout(recognitionTimerRef.current);
+    setOcrStatus("Waiting for pause");
     recognitionTimerRef.current = window.setTimeout(() => {
       recognizeText();
-    }, 650);
+    }, OCR_RECOGNITION_DELAY_MS);
   }, [recognizeText]);
 
   useEffect(() => {
@@ -213,7 +535,14 @@ const AirWriting = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     resetAirWritingState(ctx);
     setText("Ready");
+    setDetectedWords([]);
     setOcrStatus("Idle");
+    setOcrConfidence(null);
+    setRawOcrText("");
+    setNormalizedOcrText("");
+    setDetectedGenre(null);
+    setOcrDebugImage("");
+    setOcrProcessedImage("");
     setHud((current) => ({
       ...current,
       status: "Ready",
@@ -251,20 +580,20 @@ const AirWriting = () => {
         <section className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div className="hud-panel px-4 py-3">
-              <div className="text-xs uppercase tracking-[0.16em] text-white/60">
+              <div className="text-[13px] uppercase tracking-[0.16em] text-white/60">
                 Air Writing
               </div>
               <div className="mt-2 text-xl font-black uppercase leading-none font-thin text-white">
                 {text}
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-regular uppercase tracking-[0.14em]">
-                <span className="hud-chip">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-regular uppercase tracking-[0.10em]">
+                <span className="hud-chip text-[7px]">
                   Writing: {hud.writingMode ? "ON" : "OFF"}
                 </span>
-                <span className="hud-chip">
+                <span className="hud-chip text-[7px]">
                   Hand: {hud.handDetected ? "Detected" : "Not Detected"}
                 </span>
-                <span className="hud-chip">
+                <span className="hud-chip text-[7px]">
                   Pinch: {hud.pinchActive ? "Detected" : "Open"}
                 </span>
               </div>
@@ -276,7 +605,7 @@ const AirWriting = () => {
               <div>FPS: {hud.fps}</div>
               <div>AVG: {hud.averageFps}</div>
               <div>STATUS: {hud.trackingLost ? "TRACKING LOST" : hud.status.toUpperCase()}</div>
-              <div>MISSING: {hud.missingFrames}/{hud.maxMissingFrames}</div>
+              {/* <div>MISSING: {hud.missingFrames}/{hud.maxMissingFrames}</div> */}
             </div>
           </div>
 
@@ -319,13 +648,6 @@ const AirWriting = () => {
             </button>
 
             <button
-              className="hud-button"
-              onClick={recognizeText}
-            >
-              Recognize Text
-            </button>
-
-            <button
               className="hud-button hud-button-danger"
               onClick={clearCanvas}
             >
@@ -342,10 +664,60 @@ const AirWriting = () => {
 
         <aside className="hud-panel flex min-h-[480px] flex-col px-4 py-4">
           <div className="text-xs uppercase tracking-[0.16em] text-white/60">
-            Detected Words
+            OCR + Music
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SUPPORTED_GENRES.map((genre) => (
+              <span
+                key={genre}
+                className={`hud-chip text-[10px] font-bold uppercase ${
+                  detectedGenre === genre ? "border-cyan-300/70 text-cyan-100" : "text-white/65"
+                }`}
+              >
+                {genre}
+              </span>
+            ))}
           </div>
           <div className="mt-2 rounded-md border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs uppercase text-white/70">
             OCR: {ocrStatus}
+          </div>
+          <div className="mt-2 rounded-md border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs uppercase text-white/70">
+            Confidence: {ocrConfidence ?? "--"}%
+          </div>
+          <div className="mt-2 rounded-md border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs uppercase text-white/70">
+            Genre: {detectedGenre || "None"}
+          </div>
+          <div className="mt-2 rounded-md border border-white/10 bg-black/25 px-3 py-2 font-mono text-xs uppercase text-white/70">
+            Playback: {playbackStatus}
+          </div>
+
+          {currentSong && (
+            <div className="mt-3 rounded-md border border-white/10 bg-black/35 p-2">
+              <div className="text-xs uppercase tracking-[0.14em] text-white/50">
+                Now Playing
+              </div>
+              <div className="mt-1 text-sm font-bold text-white">
+                {currentSong.title}
+              </div>
+              <div className="text-xs uppercase text-white/50">
+                {currentSong.genre}
+              </div>
+              <iframe
+                key={playerKey}
+                title="YouTube music player"
+                className="mt-3 aspect-video w-full rounded border border-white/10"
+                src={`https://www.youtube.com/embed/${currentSong.id}?autoplay=1&controls=1&rel=0&playsinline=1`}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+              <div className="mt-2 text-[11px] leading-snug text-white/45">
+                If autoplay is blocked, click inside the player once. The next OCR match will retry automatically.
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 text-xs uppercase tracking-[0.16em] text-white/60">
+            Detected Words
           </div>
           <div className="mt-4 flex flex-col gap-2">
             {detectedWords.length === 0 ? (
@@ -367,6 +739,44 @@ const AirWriting = () => {
                 </div>
               ))
             )}
+          </div>
+
+          <div className="mt-4 rounded-md border border-white/10 bg-black/25 p-3">
+            <div className="text-xs uppercase tracking-[0.16em] text-white/50">
+              OCR Debug
+            </div>
+            <div className="mt-2 break-words font-mono text-[11px] text-white/55">
+              Raw: {rawOcrText || "--"}
+            </div>
+            <div className="mt-1 break-words font-mono text-[11px] text-white/55">
+              Normalized: {normalizedOcrText || "--"}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {ocrDebugImage && (
+                <div>
+                  <div className="mb-1 text-[10px] uppercase text-white/45">
+                    Input
+                  </div>
+                  <img
+                    src={ocrDebugImage}
+                    alt="OCR cropped input"
+                    className="max-h-28 w-full rounded border border-white/10 bg-white object-contain"
+                  />
+                </div>
+              )}
+              {ocrProcessedImage && (
+                <div>
+                  <div className="mb-1 text-[10px] uppercase text-white/45">
+                    Processed
+                  </div>
+                  <img
+                    src={ocrProcessedImage}
+                    alt="OCR processed black and white input"
+                    className="max-h-28 w-full rounded border border-white/10 bg-white object-contain"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </aside>
       </div>

@@ -9,4 +9,4 @@ router.get('/getUser',authMiddleware.authUser,authController.getUser)
 router.get('/logout',authMiddleware.authUser,authController.logoutUser)
 
 
-module.exports=router
+module.exports=router   
