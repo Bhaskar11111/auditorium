@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Tesseract from "tesseract.js";
 import { detect, init, resetAirWritingState } from "../utils/utils";
+import Logout from "../../../auth/components/Logout";
 
 const getFpsClass = (fps) => {
   if (fps < 30) return "text-red-300 border-red-400/60";
@@ -699,7 +700,8 @@ const AirWriting = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-auto bg-neutral-950 px-4 py-8 text-white">
+    <div className="min-h-screen overflow-auto bg-neutral-950 px-4 py-8 text-white relative">
+      <div className="fixed right-5"><Logout/></div>
       <div className="mx-auto grid w-fit grid-cols-[640px_280px] gap-4 rounded-lg border border-white/15 bg-neutral-900/90 p-5 shadow-2xl">
         <section className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
