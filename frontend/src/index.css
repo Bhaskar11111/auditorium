@@ -9,6 +9,21 @@ body,
   background: #000000;
 }
 
+*
+{
+  user-select: none;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #343335 #02ff4500;
+}
+
+html::-webkit-scrollbar {
+  width: 2px;
+}
+
+
 body {
   overflow: auto;
 }

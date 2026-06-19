@@ -10,41 +10,83 @@ const getFpsClass = (fps) => {
 
 const OCR_SCALE = 3;
 const OCR_PADDING = 36;
-const OCR_MIN_INK_PIXELS = 40;
-const OCR_RECOGNITION_DELAY_MS = 1200;
+const OCR_MIN_INK_PIXELS = 220;
+const OCR_MIN_BOUNDS_WIDTH = 36;
+const OCR_MIN_BOUNDS_HEIGHT = 32;
+const OCR_RECOGNITION_DELAY_MS = 1500;
+const OCR_MIN_EXACT_CONFIDENCE = 20;
+const OCR_MIN_FUZZY_CONFIDENCE = 42;
+const OCR_MIN_DISPLAY_LENGTH = 1;
+const OCR_MIN_GENRE_LENGTH = 3;
+const PLAYBACK_COOLDOWN_MS = 7000;
 const SUPPORTED_GENRES = ["POP", "HIP-HOP", "ROCK", "EDM", "CLASSICAL", "METAL"];
 const GENRE_ALIASES = {
-  POP: ["POP", "PO P", "P0P","P"],
+  POP: ["POP", "PO","P 0", "P O ", "P0P", "P0", "PQP", "PO P", "P O P"],
   "HIP-HOP": [
-    "HIP-HOP",
     "HIP HOP",
     "HIPHOP",
     "HIPPOP",
     "HIP OP",
     "HIP HP",
+    "HIP",
+    "HI",
+    "H1P",
+    "HIPP",
+    "HIPH",
+    "HIPHO",
     "HIPH0P",
     "H1PHOP",
-    "HO",
-    "HI",
-    "H"
+    "HIP-H",
+    "HIP-H0P",
+    "HIPHOPP",
   ],
-  ROCK: ["ROCK", "ROK", "ROC", "R0CK","RO","R"],
-  EDM: ["EDM", "E D M", "EDN","ED","E"],
+  ROCK: ["ROCK", "ROK", "ROC", "ROL", "RO", "R0CK", "R0K", "R0C", "R O C K","RE"],
+  EDM: ["EDM", "EDN", "ED", "E D M", "E D", "EOM", "E0M", "FDM"],
   CLASSICAL: [
     "CLASSICAL",
+    "CLASS",
+    "CLAS",
+    "CLA",
     "CLASICAL",
     "CLASSIC",
     "CLASSICA",
-    "CLASS",
     "CLASIC",
+    "CLASI",
+    "CLASL",
+    "CLASC",
+    "CLAS5",
+    "CLA55",
+
+    "CL4SS",
     "CLSSICAL",
     "CLASSICL",
     "CLASSICALS",
     "CLA5SICAL",
-    "CL",
-    "C"
+    "C L A S S",
   ],
-  METAL: ["METAL", "MET", "METL", "META", "MEL", "MFT", "NETAL", "HEAVY METAL", "HEAVYMETAL","ME","M"],
+  METAL: [
+    "METAL",
+    "MET",
+    "ME",
+    "METL",
+    "META",
+    "MFTAL",
+    "MFTL",
+    "MELAL",
+    "NETAL",
+    "N5TAL",
+    "HEAVY METAL",
+    "HEAVYMETAL",
+    "M E T A L",
+  ],
+};
+const GENRE_PREFIXES = {
+  POP: ["PO", "P0","PE"],
+  "HIP-HOP": ["HIP", "H1P", "HIPH", "HIPHO"],
+  ROCK: ["RO", "R0", "ROC", "ROK", "ROL"],
+  EDM: ["ED", "E D","EDM"],
+  CLASSICAL: ["CLA", "CLAS", "CLASS", "CL4", "CLA5"],
+  METAL: ["ME", "MET", "MFT", "MEL", "NET"],
 };
 const FALLBACK_VIDEOS = {
   POP: [
@@ -119,6 +161,17 @@ const normalizeDetectedText = (text) =>
 const compactText = (text) =>
   normalizeDetectedText(text).replace(/[^A-Z0-9]/g, "");
 
+const getDisplayTokens = (text) =>
+  normalizeDetectedText(text)
+    .split(" ")
+    .map((word) => word.trim())
+    .filter((word) => compactText(word).length >= OCR_MIN_DISPLAY_LENGTH);
+
+const getGenreTokens = (text) =>
+  getDisplayTokens(text).filter(
+    (word) => compactText(word).length >= OCR_MIN_GENRE_LENGTH
+  );
+
 const levenshteinDistance = (a, b) => {
   const matrix = Array.from({ length: a.length + 1 }, (_, row) => [row]);
 
@@ -140,51 +193,44 @@ const levenshteinDistance = (a, b) => {
   return matrix[a.length][b.length];
 };
 
-const matchGenre = (text, confidence = 100) => {
-  const normalized = normalizeDetectedText(text);
-  const compact = compactText(normalized);
+const getGenreCandidates = (genre) =>
+  [genre, ...GENRE_ALIASES[genre]].map((candidate) => ({
+    normalized: normalizeDetectedText(candidate),
+    compact: compactText(candidate),
+  }));
 
-  if (!compact) return null;
+const getBestGenreMatch = (compact) => {
+  const matches = SUPPORTED_GENRES
+    .flatMap((genre) =>
+      getGenreCandidates(genre).map((candidate) => ({
+        genre,
+        distance: levenshteinDistance(compact, candidate.compact),
+        candidateLength: candidate.compact.length,
+      }))
+    )
+    .sort((a, b) => a.distance - b.distance || b.candidateLength - a.candidateLength);
 
-  
-  if (compact === "EDM" && confidence < 55) {
+  return matches[0] || null;
+};
+
+const matchGenrePrefix = (normalized, compact, confidence) => {
+  if (confidence < OCR_MIN_EXACT_CONFIDENCE) {
     return null;
   }
 
-  if (["MET", "MFT", "MEL","MNT","M"].includes(compact)) {
-    return "METAL";
-  }
-
-  if (
-    compact.includes("HIPHOP") ||
-    compact.includes("HIPPOP") ||
-    normalized.includes("HIP HOP") ||
-    normalized.includes("HIP OP") ||
-    normalized.includes("H")
-  ) {
-    return "HIP-HOP";
-  }
-
-  if (
-    compact.startsWith("CLASS") ||
-    compact.includes("CLASIC") ||
-    compact.includes("CLASICAL") ||
-    compact.includes("CLASSIC") ||
-    compact.includes("CL") ||
-    compact.includes("C") 
-  ) {
-    return "CLASSICAL";
-  }
-
   for (const genre of SUPPORTED_GENRES) {
-    const candidates = [genre, ...GENRE_ALIASES[genre]];
+    const prefixes = GENRE_PREFIXES[genre] || [];
 
     if (
-      candidates.some((candidate) => {
-        const normalizedCandidate = normalizeDetectedText(candidate);
+      prefixes.some((prefix) => {
+        const normalizedPrefix = normalizeDetectedText(prefix);
+        const compactPrefix = compactText(prefix);
+
         return (
-          normalized.includes(normalizedCandidate) ||
-          compact.includes(compactText(normalizedCandidate))
+          normalized === normalizedPrefix ||
+          compact === compactPrefix ||
+          normalized.startsWith(normalizedPrefix) ||
+          compact.startsWith(compactPrefix)
         );
       })
     ) {
@@ -192,26 +238,74 @@ const matchGenre = (text, confidence = 100) => {
     }
   }
 
-  const best = SUPPORTED_GENRES
-    .flatMap((genre) =>
-      [genre, ...GENRE_ALIASES[genre]].map((candidate) => ({
-        genre,
-        distance: levenshteinDistance(compact, compactText(candidate)),
-      }))
-    )
-    .sort((a, b) => a.distance - b.distance)[0];
+  return null;
+};
 
-  if (!best) return null;
+const matchGenre = (text, confidence = 100) => {
+  const normalized = normalizeDetectedText(text);
+  const compact = compactText(normalized);
+  const tokens = getGenreTokens(normalized);
 
-  if (best.genre === "EDM" && confidence < 55) {
+  if (!compact || compact.length < 2) {
     return null;
   }
 
-  const maxDistance = best.genre === "CLASSICAL" || best.genre === "HIP-HOP"
-    ? 3
-    : 2;
+  for (const genre of SUPPORTED_GENRES) {
+    if (
+      getGenreCandidates(genre).some(
+        (candidate) =>
+          normalized === candidate.normalized ||
+          compact === candidate.compact
+      )
+    ) {
+      return confidence >= OCR_MIN_EXACT_CONFIDENCE ? genre : null;
+    }
+  }
 
-  return best.distance <= maxDistance ? best.genre : null;
+  for (const token of tokens) {
+    const tokenCompact = compactText(token);
+
+    for (const genre of SUPPORTED_GENRES) {
+      if (
+        getGenreCandidates(genre).some(
+          (candidate) =>
+            token === candidate.normalized ||
+            tokenCompact === candidate.compact
+        )
+      ) {
+        return confidence >= OCR_MIN_EXACT_CONFIDENCE ? genre : null;
+      }
+    }
+  }
+
+  if (
+    normalized.includes("HIP HOP") ||
+    normalized.includes("HIP-HOP") ||
+    compact.includes("HIPHOP")
+  ) {
+    return confidence >= OCR_MIN_EXACT_CONFIDENCE ? "HIP-HOP" : null;
+  }
+
+  const prefixGenre = matchGenrePrefix(normalized, compact, confidence);
+
+  if (prefixGenre) {
+    return prefixGenre;
+  }
+
+  if (compact.length < OCR_MIN_GENRE_LENGTH) {
+    return null;
+  }
+
+  const best = getBestGenreMatch(compact);
+
+  if (!best || confidence < OCR_MIN_FUZZY_CONFIDENCE) {
+    return null;
+  }
+
+  const lengthDifference = Math.abs(compact.length - best.candidateLength);
+  const maxDistance = best.candidateLength >= 8 ? 2 : 1;
+
+  return lengthDifference <= 1 && best.distance <= maxDistance ? best.genre : null;
 };
 
 const pickRandom = (items, recentIds = []) => {
@@ -283,7 +377,16 @@ const createOcrImages = (sourceCanvas) => {
     }
   }
 
-  if (inkPixels < OCR_MIN_INK_PIXELS) return null;
+  const boundsWidth = maxX - minX + 1;
+  const boundsHeight = maxY - minY + 1;
+
+  if (
+    inkPixels < OCR_MIN_INK_PIXELS ||
+    boundsWidth < OCR_MIN_BOUNDS_WIDTH ||
+    boundsHeight < OCR_MIN_BOUNDS_HEIGHT
+  ) {
+    return null;
+  }
 
   const cropX = Math.max(0, minX - OCR_PADDING);
   const cropY = Math.max(0, minY - OCR_PADDING);
@@ -375,6 +478,8 @@ const AirWriting = () => {
   const ocrWorkerRef = useRef(null);
   const recognitionRunningRef = useRef(false);
   const recognitionTimerRef = useRef(null);
+  const lastPlayedGenreRef = useRef(null);
+  const lastPlaybackAtRef = useRef(0);
 
   const [text, setText] = useState("Ready");
   const [detectedWords, setDetectedWords] = useState([]);
@@ -411,7 +516,7 @@ const AirWriting = () => {
 
     await worker.setParameters({
       tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789- ",
-      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_WORD,
+      tessedit_pageseg_mode: Tesseract.PSM.SINGLE_LINE,
       user_defined_dpi: "300",
       preserve_interword_spaces: "1",
     });
@@ -443,7 +548,7 @@ const AirWriting = () => {
       const normalizedText = normalizeDetectedText(rawText);
       const roundedConfidence = Math.round(confidence);
       const matchedGenre = matchGenre(normalizedText, roundedConfidence);
-      const words = normalizedText.split(" ").filter(Boolean);
+      const words = getDisplayTokens(normalizedText);
       const displayWords = words.length > 0
         ? words
         : matchedGenre
@@ -472,12 +577,29 @@ const AirWriting = () => {
             ...withoutDuplicates,
           ].slice(0, 12);
         });
-        setOcrStatus(matchedGenre ? "Genre detected" : "Detected text");
+        setOcrStatus(
+          matchedGenre
+            ? "Genre detected"
+            : roundedConfidence < OCR_MIN_EXACT_CONFIDENCE
+              ? "Low confidence"
+              : "Detected text"
+        );
       } else {
-        setOcrStatus("No text found");
+        setOcrStatus(
+          normalizedText ? "Waiting for full word" : "No text found"
+        );
       }
 
       if (matchedGenre) {
+        const now = Date.now();
+        const isRepeatedGenre = lastPlayedGenreRef.current === matchedGenre;
+        const isCoolingDown = now - lastPlaybackAtRef.current < PLAYBACK_COOLDOWN_MS;
+
+        if (isRepeatedGenre && isCoolingDown) {
+          setPlaybackStatus("Already playing genre");
+          return;
+        }
+
         setPlaybackStatus("Finding song");
 
         try {
@@ -486,6 +608,8 @@ const AirWriting = () => {
             ...song,
             genre: matchedGenre,
           });
+          lastPlayedGenreRef.current = matchedGenre;
+          lastPlaybackAtRef.current = now;
           setPlayerKey((key) => key + 1);
           setPlaybackStatus("Autoplay requested");
         } catch (error) {
@@ -580,8 +704,8 @@ const AirWriting = () => {
         <section className="flex flex-col gap-4">
           <div className="flex items-start justify-between gap-4">
             <div className="hud-panel px-4 py-3">
-              <div className="text-[13px] uppercase tracking-[0.16em] text-white/60">
-                Air Writing
+              <div className="text-[13px] font-thin tracking-[0.16em] text-white/60">
+                auditorium
               </div>
               <div className="mt-2 text-xl font-black uppercase leading-none font-thin text-white">
                 {text}
@@ -671,7 +795,7 @@ const AirWriting = () => {
               <span
                 key={genre}
                 className={`hud-chip text-[10px] font-bold uppercase ${
-                  detectedGenre === genre ? "border-cyan-300/70 text-cyan-100" : "text-white/65"
+                  detectedGenre === genre ? "border-cyan-300/70 text-purple-500" : "text-white/65"
                 }`}
               >
                 {genre}

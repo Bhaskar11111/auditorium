@@ -42,7 +42,7 @@ const Register = () => {
               value={username}
               onChange={(e)=>setUsername(e.target.value)}
               type="text"
-              placeholder="Full name"
+              placeholder="Username"
               className="w-full bg-transparent border-b border-zinc-800 py-3 text-zinc-200 placeholder:text-zinc-600 font-regular outline-none focus:border-white transition-all duration-300"
             />
           </div>
