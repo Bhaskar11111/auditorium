@@ -21,7 +21,7 @@ const OCR_MIN_GENRE_LENGTH = 3;
 const PLAYBACK_COOLDOWN_MS = 7000;
 const SUPPORTED_GENRES = ["POP", "HIP-HOP", "ROCK", "EDM", "CLASSICAL", "METAL"];
 const GENRE_ALIASES = {
-  POP: ["POP", "PO","P 0", "P O ", "P0P", "P0", "PQP", "PO P", "P O P"],
+  POP: ["POP", "PC", "PE", "PO","P 0", "P O ", "P0P", "P0", "PQP", "PO P", "P O P"],
   "HIP-HOP": [
     "HIP HOP",
     "HIPHOP",
@@ -40,8 +40,8 @@ const GENRE_ALIASES = {
     "HIP-H0P",
     "HIPHOPP",
   ],
-  ROCK: ["ROCK", "ROK", "ROC", "ROL", "RO", "R0CK", "R0K", "R0C", "R O C K","RE"],
-  EDM: ["EDM", "EDN", "ED", "E D M", "E D", "EOM", "E0M", "FDM"],
+  ROCK: ["ROCK", "ROK", "ROC", "ROL", "RO", "RE","RC", "R0CK", "R0K", "R0C", "R O C K","RE"],
+  EDM: ["EDM", "EDN", "ED", "E D M", "E D", "E2","EC", "EOM", "E0M", "FDM"],
   CLASSICAL: [
     "CLASSICAL",
     "CLASS",
@@ -84,7 +84,7 @@ const GENRE_PREFIXES = {
   POP: ["PO", "P0","PE"],
   "HIP-HOP": ["HIP", "H1P", "HIPH", "HIPHO"],
   ROCK: ["RO", "R0", "ROC", "ROK", "ROL"],
-  EDM: ["ED", "E D","EDM"],
+  EDM: ["ED", "E D","EDM","EE","EN"],
   CLASSICAL: ["CLA", "CLAS", "CLASS", "CL4", "CLA5"],
   METAL: ["ME", "MET", "MFT", "MEL", "NET"],
 };
