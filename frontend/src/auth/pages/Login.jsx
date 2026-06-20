@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import useAuth from "../hooks/useAuth";
 import { useState } from "react";
 import { WinampButton, WinampInput, WinampWindow } from "../components/WinampUI";
 
 const Login = () => {
+
+  useEffect(() => {
+    document.title = "auditorium - login";
+  }, []);
 
     const navigate=useNavigate()
     const [username, setUsername] = useState("")

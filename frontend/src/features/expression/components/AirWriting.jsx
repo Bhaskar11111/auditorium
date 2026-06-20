@@ -4,6 +4,11 @@ import { detect, init, resetAirWritingState } from "../utils/utils";
 import Logout from "../../../auth/components/Logout";
 
 const getFpsClass = (fps) => {
+
+    useEffect(() => {
+      document.title = "auditorium - air";
+    }, []);
+
   if (fps < 30) return "text-red-300 border-red-400/60";
   if (fps < 45) return "text-yellow-200 border-yellow-300/60";
   return "text-cyan-100 border-cyan-300/50";
