@@ -22,7 +22,7 @@ const OCR_MIN_GENRE_LENGTH = 3;
 const PLAYBACK_COOLDOWN_MS = 7000;
 const SUPPORTED_GENRES = ["POP", "HIP-HOP", "ROCK", "EDM", "CLASSICAL", "METAL"];
 const GENRE_ALIASES = {
-  POP: ["POP", "PC", "PE", "PO","P 0", "P O ", "P0P", "P0", "PQP", "PO P", "P O P"],
+  POP: ["POP", "PC", "PE", "PO","P 0", "P O ", "P0P", "P0", "PQP", "PO P", "P O P", "FO","F O"],
   "HIP-HOP": [
     "HIP HOP",
     "HIPHOP",
@@ -30,6 +30,9 @@ const GENRE_ALIASES = {
     "HIP OP",
     "HIP HP",
     "HIP",
+    "7I",
+    "A I",
+    "AI",
     "HI",
     "H1P",
     "HIPP",

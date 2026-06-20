@@ -7,6 +7,17 @@ const redis=require('../config/cache')
 const userModel = require("../model/user.model")
 const blacklistModel = require('../model/blacklist.model')
 
+const TOKEN_MAX_AGE_MS = 7 * 60 * 60 * 1000
+const TOKEN_COOKIE_OPTIONS = {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: TOKEN_MAX_AGE_MS
+}
+
+const createToken = (payload) =>
+    jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: '7h'
+    })
 
 const registerUser=(async(req,res)=>
 {
@@ -36,15 +47,12 @@ const registerUser=(async(req,res)=>
         password:hash
     })
 
-    const token=jwt.sign({
+    const token=createToken({
         id:user._id,
         username
-    },process.env.JWT_SECRET,
-{
-    expiresIn:"3d"
-})
+    })
 
-    res.cookie('token',token)
+    res.cookie('token',token,TOKEN_COOKIE_OPTIONS)
 
     res.status(200).json({
 
@@ -72,7 +80,7 @@ const loginUser=(async(req,res)=>
 
     if(!user)
     {
-        res.status(401).json({
+        return res.status(401).json({
             message:'Unauthorized access'
 
         })
@@ -82,21 +90,18 @@ const loginUser=(async(req,res)=>
 
     if(!hash)
     {
-         res.status(401).json({
+         return res.status(401).json({
             message:'Invalid credentials'
 
         })
     }
 
-    const token=jwt.sign({
+    const token=createToken({
         id:user._id,
         identifier
 
-    },process.env.JWT_SECRET,
-{
-    expiresIn:"3d"
-})
-    res.cookie('token',token)
+    })
+    res.cookie('token',token,TOKEN_COOKIE_OPTIONS)
 
     res.status(200).json({
         message:'Logged in successfully',
@@ -134,19 +139,19 @@ const logoutUser=(async(req,res)=>
 {
     const token=req.cookies.token
 
-    if(!token)
+    res.clearCookie('token', {
+        httpOnly: TOKEN_COOKIE_OPTIONS.httpOnly,
+        sameSite: TOKEN_COOKIE_OPTIONS.sameSite
+    })
+
+    if(token)
     {
-        return res.status(401).json({
-            message:'Token not found'
-        })
+        await redis.set(token, Date.now().toString(), 'EX', 7 * 60 * 60)
     }
 
-    res.clearCookie('token',token)
-
-    redis.set(token,Date.now().toString,"EX",60*60)
-
     return res.status(200).json({
-         message:'Logged out successfully'
+         message:'Logged out successfully',
+         user:false
     })
 })
 

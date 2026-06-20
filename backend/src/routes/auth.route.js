@@ -6,7 +6,7 @@ const authMiddleware=require('../middleware/auth.middleware')
 router.post('/register',authController.registerUser)
 router.post('/login',authController.loginUser)
 router.get('/getUser',authMiddleware.authUser,authController.getUser)
-router.get('/logout',authMiddleware.authUser,authController.logoutUser)
+router.get('/logout',authController.logoutUser)
 
 
 module.exports=router   

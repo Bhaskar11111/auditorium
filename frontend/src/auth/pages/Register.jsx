@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router";
 import useAuth from "../hooks/useAuth";
 import { useState } from "react";
+import { WinampButton, WinampInput, WinampWindow } from "../components/WinampUI";
 
 const Register = () => {
 
@@ -18,85 +19,68 @@ const Register = () => {
         if(password!=confirmPassword)
             {
                 alert('Password does not match')
+                return
             }
+        try {
             await handleRegister(username,email,password)
-        navigate('/')
+            navigate('/',{replace:true})
+        } catch (error) {
+            alert(error.response?.data?.message || 'Registration failed')
+        }
     })
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-
-        <div className="mb-12">
-          <h1 className="text-white text-2xl font-regular tracking-wide">
-            auditorium
-          </h1>
-          <p className="text-zinc-500 text-sm mt-2 font-regular">
-            Create your account and get started.
-          </p>
-        </div>
-
-        <form onSubmit={(e)=>handleSubmit(e)} className="space-y-5">
-          <div>
-            <input
+    <WinampWindow mode="REGISTER">
+        <form onSubmit={(e)=>handleSubmit(e)} className="space-y-4">
+            <WinampInput
+              label="Username"
               value={username}
               onChange={(e)=>setUsername(e.target.value)}
               type="text"
-              placeholder="Username"
-              className="w-full bg-transparent border-b border-zinc-800 py-3 text-zinc-200 placeholder:text-zinc-600 font-regular outline-none focus:border-white transition-all duration-300"
+              placeholder="operator_01"
+              autoComplete="username"
             />
-          </div>
 
-          <div>
-            <input
+            <WinampInput
+              label="Email"
               type="email"
               value={email}
               onChange={(e)=>setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full bg-transparent border-b border-zinc-800 py-3 text-zinc-200 placeholder:text-zinc-600 font-regular outline-none focus:border-white transition-all duration-300"
+              placeholder="signal@auditorium.local"
+              autoComplete="email"
             />
-          </div>
 
-          <div>
-            <input
+            <WinampInput
+              label="Password"
               type="password"
               value={password}
               onChange={(e)=>setPassword(e.target.value)}
-              placeholder="Password"
-              className="w-full bg-transparent border-b border-zinc-800 py-3 text-zinc-200 placeholder:text-zinc-600 font-regular outline-none focus:border-white transition-all duration-300"
+              placeholder="access code"
+              autoComplete="new-password"
             />
-          </div>
 
-          <div>
-            <input
+            <WinampInput
+              label="Confirm Password"
               type="password"
               value={confirmPassword}
               onChange={(e)=>setConfirmPassword(e.target.value)}
-              placeholder="Confirm password"
-              className="w-full bg-transparent border-b border-zinc-800 py-3 text-zinc-200 placeholder:text-zinc-600 font-regular outline-none focus:border-white transition-all duration-300"
+              placeholder="repeat access code"
+              autoComplete="new-password"
             />
-          </div>
 
-          <button
+          <div className="grid gap-3 pt-2 sm:grid-cols-2">
+          <WinampButton
             type="submit"
-            className="w-full mt-8 bg-white text-black py-3 rounded-full font-normal hover:opacity-90 transition duration-300"
+            disabled={loading}
           >
-            Create Account
-          </button>
+            {loading ? 'CREATING...' : 'CREATE ACCOUNT'}
+          </WinampButton>
+          <WinampButton as={Link} className="grid place-items-center text-center" to="/login">
+            BACK TO LOGIN
+          </WinampButton>
+          </div>
         </form>
-
-        <div className="mt-12 text-center">
-          <p className="text-zinc-600 text-sm font-regular">
-            Already have an account?{" "}
-           <Link to='/login'>
-            <span className="text-zinc-300 hover:text-white cursor-pointer transition">
-              Sign in
-            </span>
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+    </WinampWindow>
   );
 };
 

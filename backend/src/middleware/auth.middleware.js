@@ -33,7 +33,14 @@ const authUser=(async(req,res,next)=>
     }
     catch(err){
         console.log(err);
-        // throw err
+        res.clearCookie('token', {
+            httpOnly: true,
+            sameSite: 'lax'
+        })
+
+        return res.status(401).json({
+            message:'Invalid or expired token'
+        })
 
     }
 })
