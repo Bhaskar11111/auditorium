@@ -52,7 +52,7 @@ const GENRE_ALIASES = {
     "HIPHOPP",
   ],
   ROCK: ["ROCK", "ROK", "ROC", "ROL", "RO", "RE","RC", "R0CK", "R0K", "R0C", "R O C K","RE"],
-  EDM: ["EDM", "EDN", "ED", "E D M", "E D", "E2","EC", "EOM", "E0M", "FDM"],
+  EDM: ["EDM", "EDN", "ED", "E D M", "E D","7D","7DM", "E2","EC", "EOM", "E0M", "FDM","FP","FI"],
   CLASSICAL: [
     "CLASSICAL",
     "CLASS",
