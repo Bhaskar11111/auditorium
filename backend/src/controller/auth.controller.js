@@ -10,7 +10,8 @@ const blacklistModel = require('../model/blacklist.model')
 const TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const TOKEN_COOKIE_OPTIONS = {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: "none",
+    secure:true,
     maxAge: TOKEN_MAX_AGE_MS
 }
 
