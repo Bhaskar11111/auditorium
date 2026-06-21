@@ -41,6 +41,8 @@ const GENRE_ALIASES = {
     "A I",
     "AI",
     "HI",
+    "NO",
+    "NI",
     "H1P",
     "HIPP",
     "HIPH",
