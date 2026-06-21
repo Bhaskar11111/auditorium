@@ -4,11 +4,6 @@ import { detect, init, resetAirWritingState } from "../utils/utils";
 import Logout from "../../../auth/components/Logout";
 
 const getFpsClass = (fps) => {
-
-    useEffect(() => {
-      document.title = "auditorium - air";
-    }, []);
-
   if (fps < 30) return "text-red-300 border-red-400/60";
   if (fps < 45) return "text-yellow-200 border-yellow-300/60";
   return "text-cyan-100 border-cyan-300/50";
@@ -515,6 +510,10 @@ const AirWriting = () => {
     clearCountdown: null,
   });
 
+  useEffect(() => {
+    document.title = "auditorium - air";
+  }, []);
+
   const getOcrWorker = useCallback(async () => {
     if (ocrWorkerRef.current) {
       return ocrWorkerRef.current;
@@ -708,16 +707,18 @@ const AirWriting = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-auto bg-neutral-950 px-4 py-8 text-white relative">
-      <div className="fixed right-5"><Logout/></div>
-      <div className="mx-auto grid w-fit grid-cols-[640px_280px] gap-4 rounded-lg border border-white/15 bg-neutral-900/90 p-5 shadow-2xl">
-        <section className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="hud-panel px-4 py-3">
+    <div className="relative min-h-screen overflow-auto bg-neutral-950 px-3 py-5 text-white sm:px-4 sm:py-8">
+      <div className="fixed right-3 top-3 z-20 sm:right-5">
+        <Logout/>
+      </div>
+      <div className="mx-auto grid w-full max-w-[960px] gap-4 rounded-lg border border-white/15 bg-neutral-900/90 p-3 shadow-2xl sm:p-5 lg:grid-cols-[minmax(0,640px)_280px]">
+        <section className="flex min-w-0 flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="hud-panel px-3 py-3 sm:px-4">
               <div className="text-[13px] font-thin tracking-[0.16em] text-white/60">
                 auditorium
               </div>
-              <div className="mt-2 text-xl font-black uppercase leading-none font-thin text-white">
+              <div className="mt-2 break-words text-xl font-black uppercase leading-none font-thin text-white">
                 {text}
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-regular uppercase tracking-[0.10em]">
@@ -734,7 +735,7 @@ const AirWriting = () => {
             </div>
 
             <div
-              className={`min-w-44 rounded-md border bg-black/60 px-4 py-3 font-mono text-sm ${getFpsClass(hud.fps)}`}
+              className={`w-full rounded-md border bg-black/60 px-3 py-3 font-mono text-sm sm:min-w-44 sm:w-auto sm:px-4 ${getFpsClass(hud.fps)}`}
             >
               <div>FPS: {hud.fps}</div>
               <div>AVG: {hud.averageFps}</div>
@@ -744,7 +745,7 @@ const AirWriting = () => {
           </div>
 
       
-          <div className="air-writing-stage relative h-[480px] w-[640px] overflow-hidden rounded-lg border border-white/20 bg-neutral-950">
+          <div className="air-writing-stage relative aspect-[4/3] w-full max-w-[640px] overflow-hidden rounded-lg border border-white/20 bg-neutral-950">
             <video
               ref={videoRef}
               autoPlay
@@ -752,7 +753,7 @@ const AirWriting = () => {
               playsInline
               width={640}
               height={480}
-              className="air-writing-video absolute inset-0 z-[1] h-[480px] w-[640px] scale-x-[-1] object-fill"
+              className="air-writing-video absolute inset-0 z-[1] h-full w-full scale-x-[-1] object-fill"
               style={{
                 backgroundColor: "transparent",
                 display: "block",
@@ -764,7 +765,7 @@ const AirWriting = () => {
               ref={canvasRef}
               width={640}
               height={480}
-              className="air-writing-canvas absolute inset-0 z-[2] h-[480px] w-[640px]"
+              className="air-writing-canvas absolute inset-0 z-[2] h-full w-full"
               style={{
                 backgroundColor: "transparent",
                 pointerEvents: "none",
@@ -773,16 +774,16 @@ const AirWriting = () => {
             />
           </div>
 
-          <div className="flex gap-3">
+          <div className="grid gap-3 sm:flex">
             <button
-              className="hud-button"
+              className="hud-button w-full sm:w-auto"
               onClick={startWriting}
             >
               Start
             </button>
 
             <button
-              className="hud-button hud-button-danger"
+              className="hud-button hud-button-danger w-full sm:w-auto"
               onClick={clearCanvas}
             >
               Clear Canvas
@@ -796,7 +797,7 @@ const AirWriting = () => {
           </div>
         </section>
 
-        <aside className="hud-panel flex min-h-[480px] flex-col px-4 py-4">
+        <aside className="hud-panel flex min-h-0 flex-col px-3 py-4 sm:px-4 lg:min-h-[480px]">
           <div className="text-xs uppercase tracking-[0.16em] text-white/60">
             OCR + Music
           </div>
@@ -885,7 +886,7 @@ const AirWriting = () => {
             <div className="mt-1 break-words font-mono text-[11px] text-white/55">
               Normalized: {normalizedOcrText || "--"}
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-2">
               {ocrDebugImage && (
                 <div>
                   <div className="mb-1 text-[10px] uppercase text-white/45">

@@ -7,7 +7,7 @@ const redis=require('../config/cache')
 const userModel = require("../model/user.model")
 const blacklistModel = require('../model/blacklist.model')
 
-const TOKEN_MAX_AGE_MS = 7 * 60 * 60 * 1000
+const TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const TOKEN_COOKIE_OPTIONS = {
     httpOnly: true,
     sameSite: 'lax',
@@ -16,7 +16,7 @@ const TOKEN_COOKIE_OPTIONS = {
 
 const createToken = (payload) =>
     jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: '7h'
+        expiresIn: '1d'
     })
 
 const registerUser=(async(req,res)=>

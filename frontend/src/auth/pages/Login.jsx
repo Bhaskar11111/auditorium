@@ -31,11 +31,11 @@ const Login = () => {
     <WinampWindow mode="LOGIN">
         <form onSubmit={handleSubmit} className="space-y-4">
             <WinampInput
-              label="Username"
+              label="Username or email"
               value={username}
               onChange={(e)=>setUsername(e.target.value)}
               type="text"
-              placeholder="operator_01"
+              placeholder="operator_01 / signal@auditorium.local"
               autoComplete="username"
             />
 

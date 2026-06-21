@@ -132,7 +132,7 @@ export const WinampWindow = ({ children, mode = "LOGIN" }) => (
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-3 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
-            <span>Auditorium OS v1.0.0</span>
+            <span>Auditorium OS v1.1.0</span>
             <span className="flex items-center gap-2 text-cyan-200">
               <StatusLED label="SYSTEM READY" tone="green" />
             </span>
