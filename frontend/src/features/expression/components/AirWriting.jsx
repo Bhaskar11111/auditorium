@@ -30,6 +30,13 @@ const GENRE_ALIASES = {
     "HIP OP",
     "HIP HP",
     "HIP",
+    "HO",
+    "H O P",
+    "H O",
+    "HE",
+    "H E",
+    "H C",
+    "HC",
     "7I",
     "A I",
     "AI",
@@ -86,7 +93,7 @@ const GENRE_ALIASES = {
 };
 const GENRE_PREFIXES = {
   POP: ["PO", "P0","PE"],
-  "HIP-HOP": ["HIP", "H1P", "HIPH", "HIPHO"],
+  "HIP-HOP": ["HIP", "H1P", "HIPH", "HIPHO","HO","HOP","HE","HC"],
   ROCK: ["RO", "R0", "ROC", "ROK", "ROL"],
   EDM: ["ED", "E D","EDM","EE","EN"],
   CLASSICAL: ["CLA", "CLAS", "CLASS", "CL4", "CLA5"],
